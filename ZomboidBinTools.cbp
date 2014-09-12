@@ -11,6 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="map_p.bin" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -29,6 +30,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="main.cpp" />
