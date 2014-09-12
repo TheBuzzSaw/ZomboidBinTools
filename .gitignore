@@ -1,3 +1,13 @@
+# Code::Blocks excess
+bin/
+obj/
+*.depend
+*.layout
+*.cbTemp
+
+# Zomboid files
+*.bin
+
 # Compiled Object files
 *.slo
 *.lo
