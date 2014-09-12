@@ -127,7 +127,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
                 {
                     out << "    Value : "
                         //<< Read<int64_t>(current)
-                        << Read<double>(current)
+                        << EndianSwap(Read<double>(current))
                         << '\n';
                 }
             }
@@ -140,7 +140,77 @@ void Dump(const vector<uint8_t>& data, ostream& out)
     if (controlByte)
     {
         auto playerId = EndianSwap(Read<int>(current));
-        out << "Player ID : " << playerId << '\n';
+        out << "  Player ID : " << playerId << '\n';
+
+        const char* stringLabels[] = {
+            "Forename",
+            "Surname",
+            "Legs",
+            "Torso",
+            "Head",
+            "Top",
+            "Bottoms",
+            "Shoes",
+            "Shoespal",
+            "Bottomspal",
+            "Toppal",
+            "Skinpal",
+            "Hair"
+        };
+
+        for (int i = 0; i < 13; ++i)
+        {
+            out << "  "
+                << stringLabels[i]
+                << " : "
+                << ReadString(current) << '\n';
+        }
+
+        out << "  Grender : " << EndianSwap(Read<int>(current)) << '\n';
+        out << "  Profession : " << ReadString(current) << '\n';
+
+        const char* floatLabels[] = {
+            "Hair Color R",
+            "Hair Color G",
+            "Hair Color B",
+            "Top Color R",
+            "Top Color G",
+            "Top Color B",
+            "Trouser Color R",
+            "Trouser Color G",
+            "Trouser Color B"
+        };
+
+        for (int i = 0; i < 9; ++i)
+        {
+            out << "  "
+                << floatLabels[i]
+                << " : "
+                //<< Read<float>(current)
+                << EndianSwap(Read<float>(current))
+                << '\n';
+        }
+
+        //current += 16; // Not sure what's missing.
+        for (int i = 0; i < 4; ++i)
+        {
+            out << "  Unknown : "
+                << EndianSwap(Read<float>(current))
+                << '\n';
+        }
+    }
+
+    out << "Inventory Type : " << ReadString(current) << '\n';
+    out << "InvExplored : " << (int)Read<uint8_t>(current) << '\n';
+
+    int inventoryCount = EndianSwap(Read<int16_t>(current));
+    out << "InvCount : " << inventoryCount << '\n';
+
+    for (int i = 0; i < inventoryCount; ++i)
+    {
+        out << "  Item : " << ReadString(current) << '\n';
+        out << "  Uses? : " << EndianSwap(Read<int>(current)) << '\n';
+        break; // Avoid bad things for now. XD
     }
 }
 
