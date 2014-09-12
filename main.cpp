@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include <string>
 using namespace std;
 
 vector<uint8_t> LoadFile(const char* path)
@@ -52,6 +53,14 @@ const T EndianSwap(const T value)
     return *reinterpret_cast<const T*>(newBytes);
 }
 
+string ReadString(const uint8_t*& data)
+{
+    size_t length = EndianSwap(Get<uint16_t>(data));
+    const char* block = (const char*)(data + 2);
+    data += length + 2;
+    return string(block, length);
+}
+
 void Dump(const vector<uint8_t>& data, ostream& out)
 {
     const char* worldLabels[] = {
@@ -90,6 +99,49 @@ void Dump(const vector<uint8_t>& data, ostream& out)
     }
 
     out << "Player Direction : " << EndianSwap(Read<int>(current)) << '\n';
+
+    int controlByte = Read<uint8_t>(current);
+    out << "Control Byte : " << controlByte << '\n';
+
+    if (controlByte)
+    {
+        auto playerTableLength = EndianSwap(Read<int>(current));
+        out << "Player Table Length : " << playerTableLength << '\n';
+
+        for (decltype(playerTableLength) i = 0; i < playerTableLength; ++i)
+        {
+            int type = Read<uint8_t>(current);
+            out << "  Type : " << type << '\n';
+
+            if (type == 0)
+            {
+                string name = ReadString(current);
+
+                out << "    Name : " << name << '\n';
+
+                // I'm probably not doing this step correctly.
+                // Every string was followed by a 01, so I improvised.
+                int subtype = Read<uint8_t>(current);
+
+                if (subtype == 1)
+                {
+                    out << "    Value : "
+                        //<< Read<int64_t>(current)
+                        << Read<double>(current)
+                        << '\n';
+                }
+            }
+        }
+    }
+
+    controlByte = Read<uint8_t>(current);
+    out << "Control Byte : " << controlByte << '\n';
+
+    if (controlByte)
+    {
+        auto playerId = EndianSwap(Read<int>(current));
+        out << "Player ID : " << playerId << '\n';
+    }
 }
 
 int main(int argc, char** argv)
