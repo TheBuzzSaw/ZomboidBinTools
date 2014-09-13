@@ -33,14 +33,6 @@ inline const T Get(const void* target)
 }
 
 template<typename T>
-const T Read(const uint8_t*& target)
-{
-    const T result = Get<T>(target);
-    target += sizeof(T);
-    return result;
-}
-
-template<typename T>
 const T EndianSwap(const T value)
 {
     const uint8_t* oldBytes = reinterpret_cast<const uint8_t*>(&value);
@@ -51,6 +43,20 @@ const T EndianSwap(const T value)
         newBytes[i] = oldBytes[LastIndex - i];
 
     return *reinterpret_cast<const T*>(newBytes);
+}
+
+template<typename T>
+const T ReadRaw(const uint8_t*& target)
+{
+    const T result = Get<T>(target);
+    target += sizeof(T);
+    return result;
+}
+
+template<typename T>
+const T Read(const uint8_t*& target)
+{
+    return EndianSwap(ReadRaw<T>(target));
 }
 
 string ReadString(const uint8_t*& data)
@@ -76,7 +82,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
     {
         out << worldLabels[i]
             << " : "
-            << EndianSwap(Read<int>(current))
+            << Read<int>(current)
             << '\n';
     }
 
@@ -105,7 +111,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
 
     if (controlByte)
     {
-        auto playerTableLength = EndianSwap(Read<int>(current));
+        auto playerTableLength = Read<int>(current);
         out << "Player Table Length : " << playerTableLength << '\n';
 
         for (decltype(playerTableLength) i = 0; i < playerTableLength; ++i)
@@ -127,7 +133,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
                 {
                     out << "    Value : "
                         //<< Read<int64_t>(current)
-                        << EndianSwap(Read<double>(current))
+                        << Read<double>(current)
                         << '\n';
                 }
             }
@@ -139,7 +145,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
 
     if (controlByte)
     {
-        auto playerId = EndianSwap(Read<int>(current));
+        auto playerId = Read<int>(current);
         out << "  Player ID : " << playerId << '\n';
 
         const char* stringLabels[] = {
@@ -166,7 +172,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
                 << ReadString(current) << '\n';
         }
 
-        out << "  Grender : " << EndianSwap(Read<int>(current)) << '\n';
+        out << "  Grender : " << Read<int>(current) << '\n';
         out << "  Profession : " << ReadString(current) << '\n';
 
         const char* floatLabels[] = {
@@ -187,7 +193,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
                 << floatLabels[i]
                 << " : "
                 //<< Read<float>(current)
-                << EndianSwap(Read<float>(current))
+                << Read<float>(current)
                 << '\n';
         }
 
@@ -195,7 +201,7 @@ void Dump(const vector<uint8_t>& data, ostream& out)
         for (int i = 0; i < 4; ++i)
         {
             out << "  Unknown : "
-                << EndianSwap(Read<float>(current))
+                << Read<float>(current)
                 << '\n';
         }
     }
@@ -203,13 +209,13 @@ void Dump(const vector<uint8_t>& data, ostream& out)
     out << "Inventory Type : " << ReadString(current) << '\n';
     out << "InvExplored : " << (int)Read<uint8_t>(current) << '\n';
 
-    int inventoryCount = EndianSwap(Read<int16_t>(current));
+    int inventoryCount = Read<int16_t>(current);
     out << "InvCount : " << inventoryCount << '\n';
 
     for (int i = 0; i < inventoryCount; ++i)
     {
         out << "  Item : " << ReadString(current) << '\n';
-        out << "  Uses? : " << EndianSwap(Read<int>(current)) << '\n';
+        out << "  Uses? : " << Read<int>(current) << '\n';
         break; // Avoid bad things for now. XD
     }
 }
